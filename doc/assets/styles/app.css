@@ -1,0 +1,33 @@
+.reveal pre code {
+  max-height: 600px;
+}
+::-webkit-scrollbar:horizontal {
+  height: 12px;
+}
+::-webkit-scrollbar:vertical {
+  width: 12px;
+}
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+.dark ::-webkit-scrollbar-thumb {
+  box-shadow: 1px 1px 5px 1px rgba(0, 0, 0, 0.75);
+}
+.dark ::-webkit-scrollbar-track,
+.dark ::-webkit-scrollbar-corner {
+  background: #002b36;
+}
+.dark ::-webkit-scrollbar-thumb {
+  background: #073642;
+}
+.light ::-webkit-scrollbar-thumb {
+  box-shadow: 1px 1px 5px 1px rgba(200, 200, 200, 0.75);
+}
+.light ::-webkit-scrollbar-track,
+.light ::-webkit-scrollbar-corner {
+  background: #fdf6e3;
+}
+.light ::-webkit-scrollbar-thumb {
+  background: #eee8d5;
+}

@@ -78,12 +78,12 @@ gulp.task('build', ['styles', 'usemin', 'reveal']);
 gulp.task('buildServe', ['build', 'serveDist']);
 
 gulp.task('serveDist', function(){
-  serveF(['out']);
+  serveF(['doc']);
 });
 
 gulp.task('reveal', function(){
   gulp.src('bower_components/reveal.js/plugin/highlight/highlight.js')
-    .pipe(gulp.dest('out/reveal.js/plugin/highlight'));
+    .pipe(gulp.dest('doc/reveal.js/plugin/highlight'));
 });
 
 gulp.task('usemin', ['styles'], function() {
@@ -91,8 +91,8 @@ gulp.task('usemin', ['styles'], function() {
 
   gulp.src('web/index.html')
     .pipe(usemin())
-    .pipe(gulp.dest('out/'))
+    .pipe(gulp.dest('doc/'))
     .pipe(index)
-    .pipe(gulp.dest('out/assets/'))
+    .pipe(gulp.dest('doc/assets/'))
 
 });

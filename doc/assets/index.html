@@ -1,0 +1,83 @@
+<html>
+<head>
+    <title>Hands On Scala Native</title>
+    <meta charset="utf-8">
+    <base href="/">
+    <link rel="stylesheet" href="/assets/styles/libs.css"/>
+
+    <link rel="stylesheet" href="/assets/styles/app.css"/>
+</head>
+<body class="light">
+  <div class="reveal">
+    <div class="slides">
+
+<!-- == Slide 1 == -->
+<section>
+  <h4>Redraw Loop</h4>
+<pre><code data-trim data-noescape>
+def waitLoop(body: => Unit): Unit = {
+    var timer  = 0L
+    var redraw = false
+    <mark>val tv: Ptr[timeval] = stackalloc[timeval]</mark>
+    var key = 0
+    while (key != 'q') {
+      gettimeofday(tv, null)
+      if (timer < tv.tv_sec) {
+        timer = tv.tv_sec
+        redraw = true
+      }
+      if (redraw) {
+        body
+        redraw = false
+      }
+      key = getch()
+    }
+
+
+
+
+
+
+
+
+    
+  }
+</code></pre>
+</section>
+
+<!-- == Slide 2 == -->
+<section>
+<h4>Interropt with C</h4>
+<pre><code data-trim data-noescape>
+import scalanative.native._
+
+<mark>@extern</mark>
+object posix {
+  import posixh._
+  def gettimeofday(tv: Ptr[timeval], tz: Ptr[timezone]): Unit = 
+    <mark>extern</mark>
+}
+
+object posixh {
+  type time_t      = CLong
+  type suseconds_t = CLong
+  type timeval     = <mark>CStruct2[time_t, suseconds_t]</mark>
+  type timezone    = <mark>CStruct0</mark>
+
+  implicit class timevalOps(val ptr: Ptr[timeval]) {
+    def tv_sec: time_t       = <mark>!(ptr._1)</mark>
+    def tv_usec: suseconds_t = <mark>!(ptr._2)</mark>
+  }
+}
+</code></pre>
+</section>
+
+    </div>
+  </div>
+
+  <script src="/assets/scripts/libs.js"></script>
+
+  <script src="/assets/scripts/app.js"></script>
+
+</body>
+</html>

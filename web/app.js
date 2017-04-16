@@ -5,7 +5,7 @@ document.addEventListener("DOMContentLoaded", function(event) {
     history: true,
     dependencies: [
       { 
-        src: '/reveal.js/plugin/highlight/highlight.js',
+        src: 'reveal.js/plugin/highlight/highlight.js',
         async: true,
         callback: function() { hljs.initHighlightingOnLoad(); } 
       }

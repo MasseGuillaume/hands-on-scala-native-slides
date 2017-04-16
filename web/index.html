@@ -18,7 +18,100 @@
   <div class="reveal">
     <div class="slides">
 
-<!-- == Slide 1 == -->
+<section>
+  <h2>Hands-on</h2>
+  <h2>Scala-Native<h2>
+</section>
+
+<section>
+  <h2>Presentation Plan</h2>
+  <ul>
+    <li>A</li>
+    <li>A</li>
+    <li>A</li>
+  </ul>
+</section>
+
+<section>
+<pre><code data-trim data-noescape>
+┌[ 1.59 KiB/s ]─[ nbwmon-0.6 | interface: wlp4s0 ]─[ Received ]┐
+│-              *                                              │
+│-              *                                        *     │
+│-              *   *                                    *     │
+│-              *   *                                    *     │
+│-              *   *            *                       *     │
+└[ 0 B/s ]─────────────────────────────────────────────────────┘
+┌[ 3.74 KiB/s ]─────────────────────────────────[ Transmitted ]┐
+│-                               *                             │
+│-              *                *                       *     │
+│-              *   *            **                      *     │
+│-              *   *   **      ****                 *   *    *│
+│-              *   *   **** *  **** * ** * **   *   *  **    *│
+└[ 0 B/s ]─────────────────────────────────────────────────────┘
+┌[ Received ]──────────────────┐┌[ Transmitted ]───────────────┐
+│Current:               384 B/s││Current:               564 B/s│
+│Maximum:            1.59 KiB/s││Maximum:            3.74 KiB/s│
+│Average:               113 B/s││Average:               164 B/s│
+│Minimum:                 0 B/s││Minimum:                 0 B/s│
+│Total:                3.65 GiB││Total:                2.88 GiB│
+│                              ││                              │
+└──────────────────────────────┘└──────────────────────────────┘
+</code></pre>
+<mark>https://github.com/causes-/nbwmon</mark>
+</section>
+
+<section>
+https://git.io/vSMS7
+</section>
+
+<section>
+<h4>System Setup</h4>
+
+macOS:
+<pre>brew install <mark>llvm bdw-gc</mark> ncurses</pre>
+
+Ubuntu:
+<pre>sudo apt-get install <mark>clang libgc-dev libunwind-dev</mark> libncurses-dev</pre>
+
+Nix:
+<pre>nix-shell .</pre>
+
+</section>
+
+<section>
+<h4>Sbt Setup</h4>
+project/plugins.sbt
+<pre><code data-trim data-noescape>
+addSbtPlugin(<mark>"org.scala-native" % "sbt-scala-native" % "0.1.0"</mark>)
+</code></pre>
+
+build.sbt
+<pre><code data-trim data-noescape>
+enablePlugins(<mark>ScalaNativePlugin</mark>)
+
+scalaVersion := "2.11.8"
+</code></pre>
+</section>
+
+<section>
+  <section>
+    <h1>DEMO</h1>
+  </section>
+  <section>
+    <img src="out.gif" alt="nbwmon terminal demo">
+  </section>
+</section>
+
+<section>
+  <h2>Presentation Plan</h2>
+  <ul>
+    <li>A</li>
+    <li>A</li>
+    <li>A</li>
+  </ul>
+</section>
+
+
 <section>
   <h4>Redraw Loop</h4>
 <pre><code data-trim data-noescape>
@@ -39,15 +132,6 @@ def waitLoop(body: => Unit): Unit = {
       }
       key = getch()
     }
-
-
-
-
-
-
-
-
-
   }
 </code></pre>
 </section>

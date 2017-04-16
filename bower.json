@@ -1,0 +1,22 @@
+{
+  "name": "Hands-On-Scala-Native",
+  "version": "0.1.0",
+  "homepage": "",
+  "authors": [
+    "Guillaume Massé"
+  ],
+  "description": "Hands-On-Scala-Native",
+  "dependencies": {
+    "fontawesome": "~4.1.0",
+    "codemirror": "~4.12.0"
+  },
+  "keywords": [],
+  "license": "MIT",
+  "ignore": [
+    "**/.*",
+    "node_modules",
+    "bower_components",
+    "test",
+    "tests"
+  ]
+}

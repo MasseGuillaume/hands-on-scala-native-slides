@@ -7,6 +7,7 @@
   ],
   "description": "Hands-On-Scala-Native",
   "dependencies": {
+    "firacode": "git://github.com/tonsky/FiraCode.git#1.204",
     "reveal.js": "~3.4.1",
     "highlight.js": "git://github.com/isagalaev/highlight.js.git#9.10.0"
   },

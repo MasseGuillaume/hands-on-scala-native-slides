@@ -74,7 +74,7 @@ gulp.task('watch', function() {
   gulp.watch('web/**/*.js', ['js']);
 });
 
-gulp.task('build', ['styles', 'usemin', 'reveal', 'screenshoot']);
+gulp.task('build', ['styles', 'usemin', 'reveal', 'screenshoot', 'font']);
 gulp.task('buildServe', ['build', 'serveDist']);
 
 gulp.task('serveDist', function(){
@@ -84,6 +84,11 @@ gulp.task('serveDist', function(){
 gulp.task('reveal', function(){
   gulp.src('bower_components/reveal.js/plugin/highlight/highlight.js')
     .pipe(gulp.dest('docs/reveal.js/plugin/highlight'));
+});
+
+gulp.task('font', function(){
+  gulp.src('bower_components/firacode/distr/**')
+    .pipe(gulp.dest('docs/assets/styles'));
 });
 
 gulp.task('screenshoot', function(){

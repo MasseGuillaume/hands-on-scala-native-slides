@@ -1,6 +1,9 @@
 .reveal pre code {
   max-height: 600px;
 }
+.slide-number {
+  font-size: 32px;
+}
 ::-webkit-scrollbar:horizontal {
   height: 12px;
 }
@@ -30,4 +33,7 @@
 }
 .light ::-webkit-scrollbar-thumb {
   background: #eee8d5;
+}
+.reveal code {
+  font-family: 'Fira Code', monospace !important;
 }

@@ -19,45 +19,66 @@
   <div class="reveal">
     <div class="slides">
 
-      <section>
-        <pre><code data-trim data-noescape>
-case class Person(name: String, age: Int)
+<!-- == Slide 1 == -->
+<section>
+  <h4>Redraw Loop</h4>
+<pre><code data-trim data-noescape>
+def waitLoop(body: => Unit): Unit = {
+    var timer  = 0L
+    var redraw = false
+    <mark>val tv: Ptr[timeval] = stackalloc[timeval]</mark>
+    var key = 0
+    while (key != 'q') {
+      gettimeofday(tv, null)
+      if (timer < tv.tv_sec) {
+        timer = tv.tv_sec
+        redraw = true
+      }
+      if (redraw) {
+        body
+        redraw = false
+      }
+      key = getch()
+    }
 
-abstract class Vertical extends CaseJeu
-case class Haut(a: Int) extends Vertical
-case class Bas(name: String, b: Double) extends Vertical
 
-sealed trait Ior[+A, +B]
-case class Left[A](a: A) extends Ior[A, Nothing]
-case class Right[B](b: B) extends Ior[Nothing, B]
-case class Both[A, B](a: A, b: B) extends Ior[A, B]
 
-trait Functor[F[_]] {
-  def map[A, B](fa: F[A], f: A => B): F[B]
+
+
+
+
+
+    
+  }
+</code></pre>
+</section>
+
+<!-- == Slide 2 == -->
+<section>
+<h4>Interropt with C</h4>
+<pre><code data-trim data-noescape>
+import scalanative.native._
+
+<mark>@extern</mark>
+object posix {
+  import posixh._
+  def gettimeofday(tv: Ptr[timeval], tz: Ptr[timezone]): Unit = 
+    <mark>extern</mark>
 }
 
-// beware Int.MinValue
-def absoluteValue(n: Int): Int =
-  if (n < 0) -n else n
+object posixh {
+  type time_t      = CLong
+  type suseconds_t = CLong
+  type timeval     = <mark>CStruct2[time_t, suseconds_t]</mark>
+  type timezone    = <mark>CStruct0</mark>
 
-def interp(n: Int): String =
-  s"there are $n ${color} balloons.\n"
-
-type ξ[A] = (A, A)
-
-trait Hist { lhs =>
-  def ⊕(rhs: Hist): Hist
+  implicit class timevalOps(val ptr: Ptr[timeval]) {
+    def tv_sec: time_t       = <mark>!(ptr._1)</mark>
+    def tv_usec: suseconds_t = <mark>!(ptr._2)</mark>
+  }
 }
-
-def gsum[A: Ring](as: Seq[A]): A =
-  as.foldLeft(Ring[A].zero)(_ + _)
-        </code></pre>
-      </section>
-
-      <section>
-        <section>Vertical Slide 1</section>
-        <section>Vertical Slide 2</section>
-      </section>
+</code></pre>
+</section>
 
     </div>
   </div>

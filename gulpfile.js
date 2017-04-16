@@ -82,8 +82,8 @@ gulp.task('serveDist', function(){
 });
 
 gulp.task('reveal', function(){
-  gulp.src('reveal.js/plugin/highlight/highlight.js')
-    .pipe(gulp.dest('out/assets/plugin/highlight/'));
+  gulp.src('bower_components/reveal.js/plugin/highlight/highlight.js')
+    .pipe(gulp.dest('out/reveal.js/plugin/highlight'));
 });
 
 gulp.task('usemin', ['styles'], function() {

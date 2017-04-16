@@ -61,7 +61,7 @@ gulp.task('js', function(){
 });
 
 gulp.task('default', function() {
-  gulp.start('styles', 'serve', 'watch');
+  gulp.start('styles', 'reveal', 'serve', 'watch');
 });
 
 gulp.task('serve', function(){
@@ -74,16 +74,16 @@ gulp.task('watch', function() {
   gulp.watch('web/**/*.js', ['js']);
 });
 
-gulp.task('build', ['styles', 'usemin', 'font']);
+gulp.task('build', ['styles', 'usemin', 'reveal']);
 gulp.task('buildServe', ['build', 'serveDist']);
 
 gulp.task('serveDist', function(){
   serveF(['out']);
 });
 
-gulp.task('font', function(){
-  gulp.src('bower_components/fontawesome/fonts/fontawesome-webfont.woff')
-    .pipe(gulp.dest('out/assets/fonts/'));
+gulp.task('reveal', function(){
+  gulp.src('reveal.js/plugin/highlight/highlight.js')
+    .pipe(gulp.dest('out/assets/plugin/highlight/'));
 });
 
 gulp.task('usemin', ['styles'], function() {

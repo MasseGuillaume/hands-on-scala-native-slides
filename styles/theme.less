@@ -1,0 +1,71 @@
+.solarized-pallette {
+  @base00:    #657b83;
+  @base01:    #586e75;
+  @base02:    #073642;
+  @base03:    #002b36;
+
+  @base0:     #839496;
+  @base1:     #93a1a1;
+  @base2:     #eee8d5;
+  @base3:     #fdf6e3;
+
+  @yellow:    #b58900;
+  @orange:    #cb4b16;
+  @red:       #dc322f;
+  @magenta:   #d33682;
+  @violet:    #6c71c4;
+  @blue:      #268bd2;
+  @cyan:      #2aa198;
+  @green:     #859900;
+}
+
+::-webkit-scrollbar:horizontal {
+  height: 12px;
+}
+
+::-webkit-scrollbar:vertical {
+  width: 12px;
+}
+
+::-webkit-scrollbar {
+  width: 12px;
+  height: 12px;
+}
+
+.dark {
+  ::-webkit-scrollbar-thumb {
+    box-shadow: 1px 1px 5px 1px rgba(0, 0, 0, 0.75);
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    .solarized-pallette;
+
+    background: @base03;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    .solarized-pallette;
+
+    background: @base02;
+  }
+}
+
+.light {
+  ::-webkit-scrollbar-thumb {
+    box-shadow: 1px 1px 5px 1px rgba(200, 200, 200, 0.75);
+  }
+
+  ::-webkit-scrollbar-track,
+  ::-webkit-scrollbar-corner {
+    .solarized-pallette;
+
+    background: @base3;
+  }
+
+  ::-webkit-scrollbar-thumb {
+    .solarized-pallette;
+
+    background: @base2;
+  }
+}

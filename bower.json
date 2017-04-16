@@ -7,8 +7,8 @@
   ],
   "description": "Hands-On-Scala-Native",
   "dependencies": {
-    "fontawesome": "~4.1.0",
-    "codemirror": "~4.12.0"
+    "reveal.js": "~3.4.1",
+    "highlight.js": "git://github.com/isagalaev/highlight.js.git#9.10.0"
   },
   "keywords": [],
   "license": "MIT",

@@ -25,10 +25,17 @@
   <h2>Presentation Plan</h2>
   <ul>
     <li>What is Scala-Native ?</li>
-    <li>...</li>
-    <li>...</li>
-    <li>...</li>
-    <li>...</li>
+    <li>Demo: Ncurse Bandwidth Monitor</li>
+    <li>Setup (System/Sbt)</li>
+    <li>
+      Implementation
+      <ul>
+        <li>Draw Loop</li>
+        <li>Find Network Interface Name</li>
+        <li>Get Bitrate</li>
+        <li>Draw Bitrate Graph</li>
+      </ul>
+    </li>
   </ul>
 </section>
 
@@ -104,43 +111,39 @@
 
 
 <section>
-<h4>System Setup</h4>
+  <section>
+  <h4>System Setup</h4>
 
-macOS:
-<pre>brew install <mark>llvm bdw-gc</mark> ncurses</pre>
+  macOS:
+  <pre>brew install <mark>llvm bdw-gc</mark> ncurses</pre>
 
-Ubuntu:
-<pre>sudo apt-get install <mark>clang libgc-dev libunwind-dev</mark> libncurses-dev</pre>
+  Ubuntu:
+  <pre>sudo apt-get install <mark>clang libgc-dev libunwind-dev</mark> libncurses-dev</pre>
 
-Nix:
-<pre>nix-shell .</pre>
+  Nix:
+  <pre>nix-shell .</pre>
+
+  </section>
+
+  <section>
+  <h4>Sbt Setup</h4>
+  project/plugins.sbt
+  <pre><code data-trim data-noescape>
+  addSbtPlugin(<mark>"org.scala-native" % "sbt-scala-native" % "0.1.0"</mark>)
+  </code></pre>
+
+  build.sbt
+  <pre><code data-trim data-noescape>
+  enablePlugins(<mark>ScalaNativePlugin</mark>)
+
+  scalaVersion := "2.11.8"
+  </code></pre>
+  </section>
 
 </section>
 
 
 
-
-
-
-
-
-
-
-
-<section>
-<h4>Sbt Setup</h4>
-project/plugins.sbt
-<pre><code data-trim data-noescape>
-addSbtPlugin(<mark>"org.scala-native" % "sbt-scala-native" % "0.1.0"</mark>)
-</code></pre>
-
-build.sbt
-<pre><code data-trim data-noescape>
-enablePlugins(<mark>ScalaNativePlugin</mark>)
-
-scalaVersion := "2.11.8"
-</code></pre>
-</section>
 
 
 
@@ -173,7 +176,7 @@ scalaVersion := "2.11.8"
   <section>
     <h2>Implementation Plan</h2>
     <ul>
-      <li><mark>Redraw Loop</mark></li>
+      <li><mark>Draw Loop</mark></li>
       <li>Find Network Interface Name</li>
       <li>Get Bitrate</li>
       <li>Draw Bitrate Graph</li>
@@ -182,7 +185,7 @@ scalaVersion := "2.11.8"
 
 
   <section>
-    <h4>Redraw Loop</h4>
+    <h4>Draw Loop</h4>
   <pre><code data-trim data-noescape>
   def waitLoop(body: => Unit): Unit = {
       var timer  = 0L
@@ -232,7 +235,7 @@ scalaVersion := "2.11.8"
   </section>
 
   <section>
-    <h4>Redraw Loop</h4>
+    <h4>Draw Loop</h4>
   <pre><code data-trim data-noescape>
   object LoopMain {
     def main(args: Array[String]): Unit = {
@@ -253,7 +256,7 @@ scalaVersion := "2.11.8"
   <section>
     <h2>Implementation Plan</h2>
     <ul>
-      <li>Redraw Loop</li>
+      <li>Draw Loop</li>
       <li><mark>Find Network Interface Name</mark></li>
       <li>Get Bitrate</li>
       <li>Draw Bitrate Graph</li>
@@ -356,7 +359,7 @@ scalaVersion := "2.11.8"
   <section>
     <h2>Implementation Plan</h2>
     <ul>
-      <li>Redraw Loop</li>
+      <li>Draw Loop</li>
       <li>Find Network Interface Name</li>
       <li><mark>Get Bitrate</mark></li>
       <li>Draw Bitrate Graph</li>
@@ -460,6 +463,80 @@ scalaVersion := "2.11.8"
   </code></pre>
   </section>
 
+</section>
+
+
+
+
+<section>
+  <section>
+    <h2>Implementation Plan</h2>
+    <ul>
+      <li>Redraw Loop</li>
+      <li>Find Network Interface Name</li>
+      <li>Get Bitrate</li>
+      <li><mark>Draw Bitrate Graph</mark></li>
+    </ul>
+  </section>
+
+  <section>
+  <h4></h4>
+  <pre><code data-trim data-noescape>
+  val size = windowSize(stdscr)
+  waitLoop {
+    getCounter(interfaceName).foreach(data =>
+      history += data
+    )
+    graphWindow(rxGraph, history, RX, Some(interfaceName), green)
+    graphWindow(txGraph, history, TX, None, red)
+    statsWindow(rxStats, history, RX)
+    statsWindow(txStats, history, TX)
+    doupdate()
+  }
+  </code></pre>
+  </section>
+
+
+
+  <section>
+  <h4></h4>
+  <pre><code data-trim data-noescape>  
+  <mark>@link("ncurses")</mark>
+  @extern
+  object ncurses {
+    import ncursesh._
+    <mark>@name("initscr")</mark>
+    def initialzeScreen(): Ptr[Window] = extern
+
+    // print formatted string
+    def mvwprintw(
+      window: Ptr[Window], 
+      y: CInt, x: CInt,
+      fmt: <mark>CString</mark>, args: <mark>CVararg*</mark>
+    ): CInt = extern
+    
+    // print one char
+    def mvwaddch(
+      window: Ptr[Window],
+      y: CInt, x: CInt,
+      ch: ChType
+    ): CInt = extern
+
+    // ...
+  }
+  </code></pre>
+  </section>
+
+
+
+</section>
+
+
+
+<section>
+  <section>
+    <h2>What is next ?</h2>
+  </section>
 </section>
 
 

@@ -34,7 +34,7 @@
 .light ::-webkit-scrollbar-thumb {
   background: #eee8d5;
 }
-.reveal .code {
+.reveal pre code {
   font-family: 'Fira Code', monospace !important;
 }
 .reveal section img {

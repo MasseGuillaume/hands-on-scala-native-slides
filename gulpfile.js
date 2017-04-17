@@ -74,7 +74,7 @@ gulp.task('watch', function() {
   gulp.watch('web/**/*.js', ['js']);
 });
 
-gulp.task('build', ['styles', 'usemin', 'reveal', 'screenshoot', 'font']);
+gulp.task('build', ['styles', 'usemin', 'reveal', 'img']);
 gulp.task('buildServe', ['build', 'serveDist']);
 
 gulp.task('serveDist', function(){
@@ -91,9 +91,9 @@ gulp.task('font', function(){
     .pipe(gulp.dest('docs/assets/styles'));
 });
 
-gulp.task('screenshoot', function(){
-  gulp.src('web/out.gif')
-    .pipe(gulp.dest('docs/'));
+gulp.task('img', function(){
+  gulp.src('web/img/**')
+    .pipe(gulp.dest('docs/img/'));
 });
 
 gulp.task('usemin', ['styles'], function() {

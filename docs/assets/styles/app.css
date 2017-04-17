@@ -34,6 +34,18 @@
 .light ::-webkit-scrollbar-thumb {
   background: #eee8d5;
 }
-.reveal code {
+.reveal .code {
   font-family: 'Fira Code', monospace !important;
+}
+.reveal section img {
+  background-color: #073642;
+  box-shadow: none;
+  border: none;
+  padding: 10px;
+}
+.reveal .progress {
+  height: 14px;
+}
+.reveal .code-link {
+  text-transform: none;
 }

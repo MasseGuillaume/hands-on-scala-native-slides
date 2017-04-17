@@ -19,19 +19,52 @@
   <div class="reveal">
     <div class="slides">
 
+
+
 <section>
   <h2>Hands-on</h2>
   <h2>Scala-Native<h2>
+  <img alt="Scala Center Logo" src="img/scala-center-logo.png">
 </section>
+
+
+
 
 <section>
   <h2>Presentation Plan</h2>
   <ul>
-    <li>A</li>
-    <li>A</li>
-    <li>A</li>
+    <li>What is Scala-Native ?</li>
+    <li>...</li>
+    <li>...</li>
+    <li>...</li>
+    <li>...</li>
   </ul>
 </section>
+
+
+
+
+
+<section>
+  <h2>What is Scala-Native ?<h2>
+ 
+</section>
+
+
+
+
+
+
+<section>
+
+</section>
+
+
+
+
+
+
+
 
 <section>
 <pre><code data-trim data-noescape>
@@ -61,9 +94,23 @@
 <mark>https://github.com/causes-/nbwmon</mark>
 </section>
 
+
+
+
+
+
+
+
 <section>
-https://git.io/vSMS7
+  <h1>Code: <a class="code-link" href="https://git.io/vSMS7">git.io/vSMS7</a></h1>
 </section>
+
+
+
+
+
+
+
 
 <section>
 <h4>System Setup</h4>
@@ -78,6 +125,16 @@ Nix:
 <pre>nix-shell .</pre>
 
 </section>
+
+
+
+
+
+
+
+
+
+
 
 <section>
 <h4>Sbt Setup</h4>
@@ -94,75 +151,263 @@ scalaVersion := "2.11.8"
 </code></pre>
 </section>
 
+
+
+
+
 <section>
+
+
   <section>
     <h1>DEMO</h1>
   </section>
+
+
+
   <section>
-    <img src="out.gif" alt="nbwmon terminal demo">
+    <img src="img/out.gif" alt="nbwmon terminal demo">
+  </section>
+
+
+</section>
+
+
+
+
+
+
+
+
+<section>
+  <section>
+    <h2>Implementation Plan</h2>
+    <ul>
+      <li><mark>Redraw Loop</mark></li>
+      <li>Find Network Interface Name</li>
+      <li>Display Bitrate</li>
+      <li>Draw Bitrate Graph</li>
+    </ul>
+  </section>
+
+
+  <section>
+    <h4>Redraw Loop</h4>
+  <pre><code data-trim data-noescape>
+  def waitLoop(body: => Unit): Unit = {
+      var timer  = 0L
+      var redraw = false
+      val tv: <mark>Ptr[timeval]</mark> = <mark>stackalloc[timeval]</mark>
+      var key = 0
+      while (key != 'q') {
+        gettimeofday(tv, null)
+        if (timer < tv.tv_sec) { // +1 second
+          timer = tv.tv_sec
+          redraw = true
+        }
+        if (redraw) {
+          body
+          redraw = false
+        }
+        key = getch()
+      }
+    }
+  </code></pre>
+  </section>
+
+  <section>
+  <h4>Interropt with C</h4>
+  <pre><code data-trim data-noescape>
+  import scalanative.native._
+
+  <mark>@extern</mark>
+  object posix {
+    import posixh._
+    def gettimeofday(tv: Ptr[timeval], tz: Ptr[timezone]): Unit = 
+      <mark>extern</mark>
+  }
+
+  object posixh {
+    type time_t      = CLong
+    type suseconds_t = CLong
+    type timeval     = <mark>CStruct2[time_t, suseconds_t]</mark>
+    type timezone    = <mark>CStruct0</mark>
+
+    implicit class timevalOps(val ptr: Ptr[timeval]) {
+      def tv_sec: time_t       = <mark>!(ptr._1)</mark>
+      def tv_usec: suseconds_t = <mark>!(ptr._2)</mark>
+    }
+  }
+  </code></pre>
+  </section>
+
+  <section>
+    <h4>Redraw Loop</h4>
+  <pre><code data-trim data-noescape>
+  object LoopMain {
+    def main(args: Array[String]): Unit = {
+      waitLoop {
+        println("tick")
+      }
+    }
+  }
+  </code></pre>
   </section>
 </section>
 
-<section>
-  <h2>Presentation Plan</h2>
-  <ul>
-    <li>A</li>
-    <li>A</li>
-    <li>A</li>
-  </ul>
-</section>
+
+
 
 
 <section>
-  <h4>Redraw Loop</h4>
-<pre><code data-trim data-noescape>
-def waitLoop(body: => Unit): Unit = {
-    var timer  = 0L
-    var redraw = false
-    <mark>val tv: Ptr[timeval] = stackalloc[timeval]</mark>
-    var key = 0
-    while (key != 'q') {
-      gettimeofday(tv, null)
-      if (timer < tv.tv_sec) {
-        timer = tv.tv_sec
-        redraw = true
-      }
-      if (redraw) {
-        body
-        redraw = false
-      }
-      key = getch()
+  <section>
+    <h2>Implementation Plan</h2>
+    <ul>
+      <li>Redraw Loop</li>
+      <li><mark>Find Network Interface Name</mark></li>
+      <li>Display Bitrate</li>
+      <li>Draw Bitrate Graph</li>
+    </ul>
+  </section>
+
+
+  <section>
+  <h4><mark>Find</mark> Network Interface Name</h4>
+  <pre><code data-trim data-noescape>
+  def findInterface: Option[String] = {
+    withIfaddrs(_.<mark>find</mark>(interface =>
+       (interface.flags & Up) &&
+       (interface.flags & Running) &&
+      !(interface.flags & Loopback)
+    ).map(interface => fromCString(<mark>interface.name</mark>)))
+  }
+
+  def withIfaddrs[A](f: <mark>Iterator</mark>[IfaddrsOps] => A): A = {
+    val ifaddrs = stackalloc[Ptr[Ifaddrs]]
+
+    if (getifaddrs(ifaddrs) != -1) {
+      val ret = <mark>f((!ifaddrs).iterator)</mark>
+      freeifaddrs(!ifaddrs)
+      ret
+    } else {
+      println("failed to getifaddrs")
+      sys.exit(1)
     }
   }
-</code></pre>
-</section>
+  </code></pre>
+  </section>
+  
 
-<!-- == Slide 2 == -->
-<section>
-<h4>Interropt with C</h4>
-<pre><code data-trim data-noescape>
-import scalanative.native._
 
-<mark>@extern</mark>
-object posix {
-  import posixh._
-  def gettimeofday(tv: Ptr[timeval], tz: Ptr[timezone]): Unit = 
-    <mark>extern</mark>
-}
+  <section>
+  <h4>Limitations of CStruct</h4>
+  <pre><code data-trim data-noescape>
+  type Ifaddrs = CStruct7[
+    Ptr[CInt],     // [1] ifa_next (scala-native#634 Ptr[Ifaddrs])
+    Ptr[CChar],    // [2] ifa_name
+    CInt,          // [3] ifa_flags
+    Ptr[SockAddr], // [4] ifa_addr
+    Ptr[SockAddr], // [5] ifa_netmask
+    Ptr[SockAddr], // [6] ifa_ifu
+    Ptr[Byte]      // [7] ifa_data (void*)
+  ]
+  </code></pre>
+  </section>
 
-object posixh {
-  type time_t      = CLong
-  type suseconds_t = CLong
-  type timeval     = <mark>CStruct2[time_t, suseconds_t]</mark>
-  type timezone    = <mark>CStruct0</mark>
+  <section>
+  <h4>$$$ Richer Types $$$</h4>
+  <pre><code data-trim data-noescape>
+  implicit class IfaddrsOps(val ptr: Ptr[Ifaddrs]){
+    // scala-native#634
+    def next: Ptr[Ifaddrs]  = (!(ptr._1)).cast[Ptr[Ifaddrs]]
+    
+    def name: Ptr[CChar]    = !(ptr._2)
+    def flags: <mark>SiocgifFlags</mark> = new SiocgifFlags(!(ptr._3))
+    def addr: Ptr[SockAddr] = !(ptr._4)
+    def data: Ptr[Byte]     = !(ptr._7)
+    
+    // scala-native#367 we need to manually box Ptr[T]
+    def iterator: <mark>Iterator[IfaddrsOps]</mark> = new Iterator[IfaddrsOps]{
+      private var current = new IfaddrsOps(ptr)
 
-  implicit class timevalOps(val ptr: Ptr[timeval]) {
-    def tv_sec: time_t       = <mark>!(ptr._1)</mark>
-    def tv_usec: suseconds_t = <mark>!(ptr._2)</mark>
+      def hasNext: Boolean = current.ptr.next != null
+      
+      def next(): IfaddrsOps = {
+        current = new IfaddrsOps(current.next)
+        current
+      }
+    }
   }
-}
-</code></pre>
+  </code></pre>
+  </section>
+
+  <section>
+  <h4>AnyVal</h4>
+  <pre><code data-trim data-noescape>
+  class SiocgifFlags(val value: CInt) extends AnyVal {
+    def &(other: SiocgifFlags): Boolean =
+      (value & other.value) == other.value
+  }
+  object SiocgifFlags {
+    val Up       = new SiocgifFlags(1 << 1)
+    val Loopback = new SiocgifFlags(1 << 4)
+    val Running  = new SiocgifFlags(1 << 6)
+    // ...
+  }
+  </code></pre>
+  </section>
+
 </section>
+
+
+<section>
+  <section>
+    <h2>Implementation Plan</h2>
+    <ul>
+      <li>Redraw Loop</li>
+      <li>Find Network Interface Name</li>
+      <li><mark>Display Bitrate</mark></li>
+      <li>Draw Bitrate Graph</li>
+    </ul>
+  </section>
+
+  <section>
+  <h4>Total Received/Transmitted</h4>
+  <pre><code data-trim data-noescape>
+  case class Counters(
+    val rx: CUnsignedLong,
+    val tx: CUnsignedLong
+  )
+
+  object Counters {
+    def apply(stats: Ptr[RtnlLinkStats]): Counters =
+      Counters(stats.rxBytes, stats.txBytes)
+  }
+
+  def getCounter(interfaceName: String): Option[Counters] = {
+    withIfaddrs(
+      _.find(interface =>
+        fromCString(interface.name) == interfaceName &&
+        ifa.addr != null &&
+        ifa.addr.family == Packet
+      )
+      .map(interface => 
+        Counters(ifa.data.cast[Ptr[RtnlLinkStats]])
+      )
+    )
+  }
+  </code></pre>
+  </section>
+
+  <section>
+  <h4></h4>
+  <pre><code data-trim data-noescape>
+
+  </code></pre>
+  </section>
+
+
+</section>
+
 
     </div>
   </div>

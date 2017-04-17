@@ -1,7 +1,7 @@
 document.addEventListener("DOMContentLoaded", function(event) {
   Reveal.initialize({
     controls: false,
-    slideNumber: 'c/t',
+    // slideNumber: 'c/t',
     history: true,
     dependencies: [
       { 

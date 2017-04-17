@@ -54,9 +54,48 @@
 
 
 <section>
-  <h2>What is Scala-Native ?<h2>
- 
+  <section>
+    <h2>What is Scala-Native ?<h2>
+  </section>
+
+  <section>
+<pre>
+              +-----------+       +-----------+                      
+              |           |       |           |                      
+*.scala --->  | Frontend  +-----> |  Backend  | ---->  *.class 
+              |           |       |           |           (jar)       
+              +-----------+       +-----------+                      
+                parsing             bytecode                        
+                ...                   generation                     
+                typer                                                    
+
+</pre>
+  </section>
+
+
+  <section>
+<pre>
+              +-----------+       +-----------+             
+              |           |       |           |             
+*.scala --->  | Frontend  +-----> |  Backend  | ---->  *.ll
+              |           |       |           |             
+              +-----------+       +-----------+             
+                parsing             ast -> nir             
+                ...                 nir -> llvm            
+                typer      
+
+           +-----------+
+           |           |
+*.ll --->  | LLVM      | -----> ./foo
+           |           |
+           +-----------+   
+
+</pre>
+  </section>
+
 </section>
+
+
 
 
 
@@ -64,19 +103,10 @@
 
 
 <section>
-
-</section>
-
-
-
-
-
-
-
 
 <section>
 <pre><code data-trim data-noescape>
-┌[ 1.59 KiB/s ]─[ nbwmon-0.6 | interface: wlp4s0 ]─[ Received ]┐
+┌[ 1.59 KiB/s ]─────[ snbwmon| interface: wlp4s0 ]─[ Received ]┐
 │-              *                                              │
 │-              *                                        *     │
 │-              *   *                                    *     │
@@ -84,11 +114,11 @@
 │-              *   *            *                       *     │
 └[ 0 B/s ]─────────────────────────────────────────────────────┘
 ┌[ 3.74 KiB/s ]─────────────────────────────────[ Transmitted ]┐
-│-                               *                             │
-│-              *                *                       *     │
-│-              *   *            **                      *     │
-│-              *   *   **      ****                 *   *    *│
-│-              *   *   **** *  **** * ** * **   *   *  **    *│
+│-                                                             │
+│-       *                 *                            *      │
+│-       *   *             * *                          *      │
+│-       *   *  * *      * * * *                   *    *   *  │
+│-       *   *  * * * *  * * * * * * * * * *   *   *  * *   *  │
 └[ 0 B/s ]─────────────────────────────────────────────────────┘
 ┌[ Received ]──────────────────┐┌[ Transmitted ]───────────────┐
 │Current:               384 B/s││Current:               564 B/s│
@@ -102,17 +132,22 @@
 <mark>https://github.com/causes-/nbwmon</mark>
 </section>
 
+  <section>
+    <h1>DEMO</h1>
+  </section>
 
 
 
+  <section>
+    <img src="img/out.gif" alt="nbwmon terminal demo">
+  </section>
+
+  <section>
+    <h1>Code: <a class="code-link" href="https://git.io/vSMS7">git.io/vSMS7</a></h1>
+  </section>
 
 
-
-
-<section>
-  <h1>Code: <a class="code-link" href="https://git.io/vSMS7">git.io/vSMS7</a></h1>
 </section>
-
 
 
 
@@ -160,29 +195,6 @@
 
 
 <section>
-
-
-  <section>
-    <h1>DEMO</h1>
-  </section>
-
-
-
-  <section>
-    <img src="img/out.gif" alt="nbwmon terminal demo">
-  </section>
-
-
-</section>
-
-
-
-
-
-
-
-
-<section>
   <section>
     <h2>Implementation Plan</h2>
     <ul>
@@ -193,6 +205,19 @@
     </ul>
   </section>
 
+
+  <section>
+    <h4>Draw Loop</h4>
+  <pre><code data-trim data-noescape>
+  object LoopMain {
+    def main(args: Array[String]): Unit = {
+      waitLoop {
+        println("tick")
+      }
+    }
+  }
+  </code></pre>
+  </section>
 
   <section>
     <h4>Draw Loop</h4>
@@ -243,19 +268,6 @@
   }
   </code></pre>
   </section>
-
-  <section>
-    <h4>Draw Loop</h4>
-  <pre><code data-trim data-noescape>
-  object LoopMain {
-    def main(args: Array[String]): Unit = {
-      waitLoop {
-        println("tick")
-      }
-    }
-  }
-  </code></pre>
-  </section>
 </section>
 
 
@@ -282,7 +294,7 @@
        (interface.flags & Up) &&
        (interface.flags & Running) &&
       !(interface.flags & Loopback)
-    ).map(interface => fromCString(<mark>interface.name</mark>)))
+    ).map(interface => <mark>fromCString</mark>(interface.name)))
   }
 
   def withIfaddrs[A](f: <mark>Iterator</mark>[IfaddrsOps] => A): A = {
@@ -515,8 +527,10 @@
   @extern
   object ncurses {
     import ncursesh._
-    <mark>@name("initscr")</mark>
-    def initialzeScreen(): Ptr[Window] = extern
+    <mark>@name("newwin")</mark>
+    def newWindow(
+      height: Int, width: Int, 
+      y: Int, x: Int): Ptr[Window] = extern
 
     // print formatted string
     def mvwprintw(
@@ -531,12 +545,90 @@
       y: CInt, x: CInt,
       ch: ChType
     ): CInt = extern
-
-    // ...
   }
   </code></pre>
   </section>
 
+<section>
+<h4>Plain Scala</h4>
+<pre><code data-trim data-noescape>
+
+class CountersHistory (
+  maxSize: Int,
+  var lastTotal: Option[Counters],
+  txQueue: Queue[CUnsignedLong],
+  rxQueue: Queue[CUnsignedLong]){
+
+  def maximum(way: Way): Option[Double] =
+    stats(way, _.max.toDouble)
+
+  def average(way: Way): Option[Double] =
+    stats(way, q => q.sum.toDouble / q.size.toDouble)
+
+  def +=(v: Counters): CountersHistory = {
+    lastTotal.foreach{ lv =>
+      if(txQueue.size > maxSize) {
+        txQueue.dequeue()
+      }
+
+      if(rxQueue.size > maxSize) {
+        rxQueue.dequeue()
+      }
+
+      val t = v - lv
+      rxQueue += t.rx
+      txQueue += t.tx
+    }
+
+    lastTotal = Some(v)
+
+    this
+  }
+
+  private def stats(way: Way, statsF: Queue[CUnsignedLong] => Double): Option[Double] = {
+    val queue = getQueue(way)
+
+    if(queue.isEmpty) None
+    else Some(statsF(queue))
+  }
+}
+</code></pre>
+</section>
+
+
+<section>
+<h4>Plain Scala</h4>
+<pre><code data-trim data-noescape>
+  def printGraphWindow(window: Ptr[Window],
+                       history: CountersHistory,
+                       way: Way
+                       interfaceName: Option[String]): Unit = {
+    // ...
+    interfaceName.foreach{ name =>
+      val text = s"[ snbwmon | interface: $name ]"
+      val center = (size.width - text.size) / 2
+      mvwprintw(window, 0, center, toCString(text));
+    }
+
+    history.maximum(way).foreach{ max =>
+      val (rate, unit) = showBytes(max)  
+      mvwprintw(window, 0, 1, c"[%.2f %s/s]", rate, toCString(unit))
+      history.getQueue(way).reverse.zipWithIndex.foreach{ case (value, i) =>
+        val col = size.width - i - 2
+        val border = 2
+        val h = Math.ceil(value.toDouble / max.toDouble * (size.height - border).toDouble)
+        var j = size.height - 2
+        var jj = 0
+        while(j > 0 && jj < h) {
+          mvwaddch(window, j, col, '*')
+          j -= 1
+          jj += 1
+        }
+      }
+    }
+  }
+</code></pre>
+</section>
 
 
 </section>
@@ -547,6 +639,17 @@
   <section>
     <h2>What is next ?</h2>
   </section>
+
+  <section>
+    <h1>Try it out: <a class="code-link" href="https://git.io/vSMS7">git.io/vSMS7</a></h1>
+  </section>
+
+
+  <section>
+    <h1>Questions ?</h1>
+    <h2>Please Vote (:--))</h2>
+  </section>
+
 </section>
 
 

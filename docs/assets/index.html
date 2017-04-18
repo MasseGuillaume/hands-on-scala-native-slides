@@ -51,6 +51,17 @@
   </section>
 
   <section>
+    <h2>What is Scala-Native ?</h2>
+    <ul>
+      <li>Created by Denys Shabalin (quasiquote)</li>
+      <li>Open source: github.com/scala-native/scala-native</li>
+      <li>Started August 2015</li>
+    </ul>
+  </section>
+
+
+  <section>
+    <h2>The Scala Compiler</h2>
 <pre>
               +-----------+       +-----------+                      
               |           |       |           |                      
@@ -66,19 +77,23 @@
 
 
   <section>
+  <h2>The Scala Native Compiler</h2>
 <pre>
               +-----------+       +-----------+             
               |           |       |           |             
-*.scala --->  | Frontend  +-----> |  Backend  | ---->  *.ll
+*.scala --->  | Frontend  +-----> |  Backend* | ---->  *.ll
               |           |       |           |             
               +-----------+       +-----------+             
-                parsing             ast -> nir             
-                ...                 nir -> llvm            
-                typer      
+                parsing             ast -> nir
+                ...                 optimizations   
+                typer               nir -> llvm
 
+</pre>
+
+<pre>
               +-----------+
               |           |
-   *.ll --->  | LLVM      | -----> ./foo
+   *.ll --->  |   LLVM    | -----> ./foo
               |           |
               +-----------+   
 
@@ -95,6 +110,10 @@
 
 
 <section>
+
+  <section>
+    <h2>Ncurse Bandwidth Monitor<h2>
+  </section>
 
 <section>
 <pre><code data-trim data-noescape>
@@ -123,12 +142,6 @@
 </code></pre>
 <mark>https://github.com/causes-/nbwmon</mark>
 </section>
-
-  <section>
-    <h1>DEMO</h1>
-  </section>
-
-
 
   <section>
     <img src="img/out.gif" alt="nbwmon terminal demo">

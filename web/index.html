@@ -71,44 +71,23 @@
 
 
   <section>
-    <h2>The Scala Compiler</h2>
-<pre>
-              +-----------+       +-----------+                      
-              |           |       |           |                      
-*.scala --->  | Frontend  +-----> |  Backend  | ---->  *.class 
-              |           |       |           |           (jar)       
-              +-----------+       +-----------+                      
-                parsing             bytecode                        
-                ...                   generation                     
-                typer                                                    
-
-</pre>
+    <h2>How it works</h2>
+    <ul>
+      <li>*.scala -> *.class -> jvm</li>
+      <li>*.scala ->   llvm  -> app.exe</li>
+    </ul>
   </section>
-
 
   <section>
-  <h2>The Scala Native Compiler</h2>
-<pre>
-              +-----------+       +-----------+             
-              |           |       |           |             
-*.scala --->  | Frontend  +-----> |  Backend* | ---->  *.ll
-              |           |       |           |             
-              +-----------+       +-----------+             
-                parsing             ast -> nir
-                ...                 optimizations   
-                typer               nir -> llvm
-
-</pre>
-
-<pre>
-              +-----------+
-              |           |
-   *.ll --->  |   LLVM    | -----> ./foo
-              |           |
-              +-----------+   
-
-</pre>
+    <h2>Features</h2>
+    <ul>
+      <li><mark>Amazing C Interrop</mark></li>
+      <li>Fast startup time</li>
+      <li>IDE support (100% Scala)</li>
+      <li>Garbage Collection</li>
+    </ul>
   </section>
+
 
 </section>
 
@@ -156,11 +135,6 @@
   <section>
     <img src="img/out.gif" alt="nbwmon terminal demo">
   </section>
-
-  <section>
-    <h1>Code: <a class="code-link" href="https://git.io/vSMS7">git.io/vSMS7</a></h1>
-  </section>
-
 
 </section>
 
@@ -235,28 +209,70 @@
   </section>
 
   <section>
+  <h4>Draw Loop (in C)</h4>
+  <pre><code data-trim data-noescape>
+  void draw(){ }
+
+  int main(int argc, char **argv) {
+    long timer  = 0;
+    bool redraw = true;
+    <mark>struct timeval tv;</mark>
+
+    while(true){
+      <mark>gettimeofday(&tv, NULL);</mark>
+
+      if (timer < tv.tv_sec) {
+        timer = tv.tv_sec;
+        redraw = true;
+      }
+
+      if(redraw) {
+        draw()
+        redraw = false
+      }
+    }
+  }
+  </code></pre>
+  </section>
+
+  <section>
     <h4>Draw Loop</h4>
   <pre><code data-trim data-noescape>
   def waitLoop(body: => Unit): Unit = {
-      var timer  = 0L
-      var redraw = false
-      val tv: <mark>Ptr[timeval]</mark> = <mark>stackalloc[timeval]</mark>
-      var key = 0
-      while (key != 'q') {
-        gettimeofday(tv, null)
-        if (timer < tv.tv_sec) { // +1 second
-          timer = tv.tv_sec
-          redraw = true
-        }
-        if (redraw) {
-          body
-          redraw = false
-        }
-        key = getch()
+    var timer  = 0L
+    var redraw = false
+    val tv: <mark>Ptr[timeval]</mark> = <mark>stackalloc[timeval]</mark>
+    while (true) {
+      <mark>gettimeofday(tv, null)</mark>
+      if (timer < tv.tv_sec) { // +1 second
+        timer = tv.tv_sec
+        redraw = true
+      }
+      if (redraw) {
+        body
+        redraw = false
       }
     }
+  }
   </code></pre>
   </section>
+
+  <section>
+  <h4>POSIX api</h4>
+  <pre><code data-trim data-noescape>
+   int gettimeofday(struct timeval *tv, struct timezone *tz);
+  
+   struct timeval {
+     time_t      tv_sec;     /* seconds */
+     suseconds_t tv_usec;    /* microseconds */
+   };
+  
+   struct timezone {
+     int tz_minuteswest;     /* minutes west of Greenwich */
+     int tz_dsttime;         /* type of DST correction */
+   };
+   </code></pre>
+   </section>
 
   <section>
   <h4>Interropt with C</h4>
@@ -328,21 +344,51 @@
   </section>
   
 
+  <section>
+  <h4>Ifaddrs in C</h4>
+  <pre><code data-trim data-noescape>
+   int getifaddrs(struct ifaddrs **ifap);
+
+   void freeifaddrs(struct ifaddrs *ifa);
+   
+   struct ifaddrs {
+     struct ifaddrs  *ifa_next;
+     char            *ifa_name;
+     unsigned int     ifa_flags;
+     struct sockaddr *ifa_addr;
+     struct sockaddr *ifa_netmask;
+     struct sockaddr *ifa_ifu;
+     void            *ifa_data;
+   };
+
+  </code></pre>
+  </section>
+
 
   <section>
-  <h4>Limitations of CStruct</h4>
+  <h4>Ifaddrs in Scala</h4>
   <pre><code data-trim data-noescape>
-  type Ifaddrs = CStruct7[
-  //Ptr[Ifaddrs] see scala-native#634
-    Ptr[CInt],     // [1] ifa_next
+  @extern
+  object Ifaddr {
+    def getifaddrs(ifap: Ptr[Ptr[Ifaddrs]]): CInt = extern
+    
+    def freeifaddrs(ifa: Ptr[Ifaddrs]): Unit = extern
+  }
 
-    Ptr[CChar],    // [2] ifa_name
-    CInt,          // [3] ifa_flags
-    Ptr[SockAddr], // [4] ifa_addr
-    Ptr[SockAddr], // [5] ifa_netmask
-    Ptr[SockAddr], // [6] ifa_ifu
-    Ptr[Byte]      // [7] ifa_data (void*)
-  ]
+  object IfaddrH {
+    type Ifaddrs = CStruct7[
+    //Ptr[Ifaddrs] see scala-native#634
+      Ptr[CInt],     // [1] ifa_next
+
+      Ptr[CChar],    // [2] ifa_name
+      CInt,          // [3] ifa_flags
+      Ptr[SockAddr], // [4] ifa_addr
+      Ptr[SockAddr], // [5] ifa_netmask
+      Ptr[SockAddr], // [6] ifa_ifu
+      Ptr[Byte]      // [7] ifa_data (void*)
+    ]
+    // ...
+  }
   </code></pre>
   </section>
 
@@ -374,7 +420,7 @@
   </section>
 
   <section>
-  <h4>AnyVal</h4>
+  <h4>C Flags</h4>
   <pre><code data-trim data-noescape>
   class SiocgifFlags(val value: CInt) extends AnyVal {
     def &(other: SiocgifFlags): Boolean =
@@ -406,11 +452,7 @@
   <section>
   <h4>Total Received/Transmitted</h4>
   <pre><code data-trim data-noescape>
-  case class Counters(
-    val rx: CUnsignedLong,
-    val tx: CUnsignedLong
-  )
-
+  case class Counters(val rx: CUnsignedLong, val tx: CUnsignedLong)
   object Counters {
     def apply(stats: Ptr[RtnlLinkStats]): Counters =
       Counters(stats.rxBytes, stats.txBytes)
@@ -430,6 +472,33 @@
   }
   </code></pre>
   </section>
+
+
+  <section>
+  <h4>Total Received/Transmitted (in C)</h4>
+  <pre><code data-trim data-noescape>
+  int getData(char* ifname, unsigned long *tx_bytes, unsigned long *rx_bytes) { 
+    struct ifaddrs *ifaddr, *ifa;
+    int ret = 0;
+    if (getifaddrs(&ifaddr) == -1) return;
+    for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
+       if (ifa->ifa_addr == NULL) continue;
+       if (!strncmp(ifname, ifa->ifa_name, IFNAMSIZ)) continue;
+
+       if (ifa->ifa_addr->sa_family == AF_PACKET && 
+           ifa->ifa_data != NULL) {
+         struct rtnl_link_stats *stats = ifa->ifa_data;
+         *tx_bytes = stats->tx_bytes;
+         *rx_bytes = stats->rx_bytes;
+         return 1;
+       }
+    }
+    freeifaddrs(ifaddr);
+    return ret;
+  }
+  </code></pre>
+  </section>
+
 
   <section>
   <h4>Catch 22</h4>

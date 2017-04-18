@@ -263,13 +263,13 @@
    int gettimeofday(struct timeval *tv, struct timezone *tz);
   
    struct timeval {
-     time_t      tv_sec;     /* seconds */
-     suseconds_t tv_usec;    /* microseconds */
+     time_t      tv_sec;
+     suseconds_t tv_usec;
    };
   
    struct timezone {
-     int tz_minuteswest;     /* minutes west of Greenwich */
-     int tz_dsttime;         /* type of DST correction */
+     int tz_minuteswest;
+     int tz_dsttime;
    };
    </code></pre>
    </section>
@@ -368,13 +368,6 @@
   <section>
   <h4>Ifaddrs in Scala</h4>
   <pre><code data-trim data-noescape>
-  @extern
-  object Ifaddr {
-    def getifaddrs(ifap: Ptr[Ptr[Ifaddrs]]): CInt = extern
-    
-    def freeifaddrs(ifa: Ptr[Ifaddrs]): Unit = extern
-  }
-
   object IfaddrH {
     type Ifaddrs = CStruct7[
     //Ptr[Ifaddrs] see scala-native#634
@@ -388,6 +381,17 @@
       Ptr[Byte]      // [7] ifa_data (void*)
     ]
     // ...
+  }
+  </code></pre>
+  </section>
+
+  <section>
+  <h4>Ifaddrs in Scala</h4>
+  <pre><code data-trim data-noescape>
+  @extern
+  object Ifaddr {
+    def getifaddrs(ifap: Ptr[Ptr[Ifaddrs]]): CInt = extern  
+    def freeifaddrs(ifa: Ptr[Ifaddrs]): Unit = extern
   }
   </code></pre>
   </section>
@@ -477,20 +481,25 @@
   <section>
   <h4>Total Received/Transmitted (in C)</h4>
   <pre><code data-trim data-noescape>
-  int getData(char* ifname, unsigned long *tx_bytes, unsigned long *rx_bytes) { 
+  int getData(char* ifname, unsigned long *tx_bytes, 
+                            unsigned long *rx_bytes) { 
     struct ifaddrs *ifaddr, *ifa;
     int ret = 0;
     if (getifaddrs(&ifaddr) == -1) return;
     for (ifa = ifaddr; ifa != NULL; ifa = ifa->ifa_next) {
-       if (ifa->ifa_addr == NULL) continue;
-       if (!strncmp(ifname, ifa->ifa_name, IFNAMSIZ)) continue;
+       if (ifa->ifa_addr == NULL)
+         continue;
+
+       if (!strncmp(ifname, ifa->ifa_name, IFNAMSIZ))
+         continue;
 
        if (ifa->ifa_addr->sa_family == AF_PACKET && 
            ifa->ifa_data != NULL) {
          struct rtnl_link_stats *stats = ifa->ifa_data;
          *tx_bytes = stats->tx_bytes;
          *rx_bytes = stats->rx_bytes;
-         return 1;
+         ret = 1;
+         break;
        }
     }
     freeifaddrs(ifaddr);
@@ -546,29 +555,6 @@
   }
   </code></pre>
   </section>
-
-  <section>
-  <h4>Funky Types</h4>
-  <pre><code data-trim data-noescape>
-  <mark>ifa.addr.family == Packet</mark>
-
-  type _14 = Nat.Digit[Nat._1, Nat._4]
-  type SockAddr = CStruct2[
-    CInt,              // [1] sa_family
-    CArray[CChar, _14] // [2] sa_data
-  ]
-  implicit class SockAddrOps(val ptr: Ptr[SockAddr]) {
-    def family: SaFamily         = new SaFamily(!(ptr._1))
-    def data: CArray[CChar, _14] = !(ptr._2)
-  }
-  class SaFamily(val value: CInt) extends AnyVal
-  object SaFamily {
-    final val Packet = new SaFamily(17)
-    // ...
-  }
-  </code></pre>
-  </section>
-
 </section>
 
 
@@ -617,14 +603,16 @@
       y: Int, x: Int): Ptr[Window] = extern
 
     // print formatted string
-    def mvwprintw(
+    @name("mvwprintw")
+    def printFormatted(
       window: Ptr[Window], 
       y: CInt, x: CInt,
       fmt: <mark>CString</mark>, args: <mark>CVararg*</mark>
     ): CInt = extern
     
     // print one char
-    def mvwaddch(
+    @name("mvwaddch")
+    def printChar(
       window: Ptr[Window],
       y: CInt, x: CInt,
       ch: ChType
@@ -691,12 +679,12 @@ class CountersHistory (
     interfaceName.foreach{ name =>
       val text = s"[ snbwmon | interface: $name ]"
       val center = (size.width - text.size) / 2
-      mvwprintw(window, 0, center, toCString(text));
+      printFormatted(window, 0, center, toCString(text));
     }
 
     history.maximum(way).foreach{ max =>
       val (rate, unit) = showBytes(max)  
-      mvwprintw(window, 0, 1, c"[%.2f %s/s]", rate, toCString(unit))
+      printFormatted(window, 0, 1, c"[%.2f %s/s]", rate, toCString(unit))
       history.getQueue(way).reverse.zipWithIndex.foreach{ case (value, i) =>
         val col = size.width - i - 2
         val border = 2
@@ -704,7 +692,7 @@ class CountersHistory (
         var j = size.height - 2
         var jj = 0
         while(j > 0 && jj < h) {
-          mvwaddch(window, j, col, '*')
+          printChar(window, j, col, '*')
           j -= 1
           jj += 1
         }
@@ -728,6 +716,15 @@ class CountersHistory (
     <h1>Try it out: <a class="code-link" href="https://git.io/vSMS7">git.io/vSMS7</a></h1>
   </section>
 
+  <section>
+    <h3>Hacking ideas</h3>
+    <ul>
+      <li>TODO app with ncurses</li>
+      <li>Create ncurses Wrapper</li>
+      <li>Create Linux Api Wrapper <br> 
+          (Only 10 000 methods!)</li>
+    </ul>
+  </section>
 
   <section>
     <h1>Questions ?</h1>

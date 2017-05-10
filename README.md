@@ -25,3 +25,7 @@ git push origin master
 
 # open https://github.com/MasseGuillaume/hands-on-scala-native
 ```
+
+Print PDF:
+
+https://github.com/hakimel/reveal.js/#pdf-export

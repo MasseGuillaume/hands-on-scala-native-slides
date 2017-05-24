@@ -20,6 +20,7 @@
   <img alt="Scala Center Logo" src="img/scala-center-logo.png">
 
   <h3>Guillaume Massé<h3>
+  <h3>Martin Duhem</h3>
 </section>
 
 
@@ -56,7 +57,8 @@
     <h2>What is Scala-Native ?</h2>
     <ul>
       <li>Created by Denys Shabalin (quasiquote)</li>
-      <li>Open source: github.com/scala-native/scala-native</li>
+      <li>Open source: <a
+                               href="https://github.com/scala-native/scala-native">github.com/scala-native/scala-native</a></li>
       <li>Started August 2015</li>
     </ul>
   </section>
@@ -158,10 +160,10 @@
   <h4>System Setup</h4>
 
   macOS:
-  <pre>brew install <mark>llvm bdw-gc</mark> ncurses</pre>
+  <pre>brew install <mark>llvm bdw-gc re2</mark> ncurses</pre>
 
   Ubuntu:
-  <pre>sudo apt-get install <mark>clang libgc-dev libunwind-dev</mark> libncurses-dev</pre>
+  <pre>sudo apt-get install <mark>clang libgc-dev libunwind-dev libre2-dev</mark> libncurses-dev</pre>
 
   Nix:
   <pre>nix-shell .</pre>
@@ -172,7 +174,7 @@
   <h4>Sbt Setup</h4>
   project/plugins.sbt
   <pre><code data-trim data-noescape>
-  addSbtPlugin(<mark>"org.scala-native" % "sbt-scala-native" % "0.2.0"</mark>)
+  addSbtPlugin(<mark>"org.scala-native" % "sbt-scala-native" % "0.2.1"</mark>)
   </code></pre>
 
   build.sbt
@@ -218,14 +220,14 @@
   </section>
 
   <section>
-  <h4>Draw Loop (in C)</h4>
+  <h4>Draw Loop (C VS Scala)</h4>
   <pre><code data-trim data-noescape>
-  void draw(){ }
-
-  int main(int argc, char **argv) {
+  // In C
+  void waitLoop() {
     long timer  = 0;
     bool redraw = true;
     <mark>struct timeval tv;</mark>
+
 
     while(true){
       <mark>gettimeofday(&tv, NULL);</mark>
@@ -236,27 +238,29 @@
       }
 
       if(redraw) {
-        draw()
+        <mark>draw()</mark>
         redraw = false
       }
     }
   }
   </code></pre>
-  </section>
 
-  <section>
-    <h4>Draw Loop</h4>
   <pre><code data-trim data-noescape>
-  def waitLoop(body: => Unit): Unit = {
+  // IN Scala
+  def waitLoop(<mark>body: => Unit</mark>): Unit = {
     var timer  = 0L
     var redraw = false
-    val tv: <mark>Ptr[timeval]</mark> = <mark>stackalloc[timeval]</mark>
+    val tv: <mark>Ptr[timeval]</mark> =
+      <mark>stackalloc[timeval]</mark>
+
     while (true) {
       <mark>gettimeofday(tv, null)</mark>
-      if (timer < tv.tv_sec) { // +1 second
+
+      if (timer < tv.tv_sec) {
         timer = tv.tv_sec
         redraw = true
       }
+
       if (redraw) {
         body
         redraw = false
@@ -269,38 +273,40 @@
   <section>
   <h4>POSIX api</h4>
   <pre><code data-trim data-noescape>
-   int gettimeofday(struct timeval *tv, struct timezone *tz);
+   //in C
+
+
+   int gettimeofday(
+     struct timeval *tv, 
+     struct timezone *tz
+   );
   
    struct timeval {
      time_t      tv_sec;
      suseconds_t tv_usec;
    };
-  
-   struct timezone {
-     int tz_minuteswest;
-     int tz_dsttime;
-   };
    </code></pre>
+    <pre><code data-trim data-noescape>
+    <mark>@extern</mark>
+    object posix {
+
+      def gettimeofday(
+        tv: Ptr[timeval],
+        tz: Ptr[timezone]
+      ): Unit = <mark>extern</mark>
+
+      type timeval = <mark>CStruct2[
+        time_t,
+        suseconds_t
+      ]</mark>  
+    }
+    </code></pre>
    </section>
 
   <section>
-  <h4>Interropt with C</h4>
+  <h4>POSIX api (cont.)</h4>
   <pre><code data-trim data-noescape>
-  import scalanative.native._
-
-  <mark>@extern</mark>
-  object posix {
-    import posixh._
-    def gettimeofday(tv: Ptr[timeval], tz: Ptr[timezone]): Unit = 
-      <mark>extern</mark>
-  }
-
-  object posixh {
-    type time_t      = CLong
-    type suseconds_t = CLong
-    type timeval     = <mark>CStruct2[time_t, suseconds_t]</mark>
-    type timezone    = <mark>CStruct0</mark>
-
+  object posixops {
     implicit class timevalOps(val ptr: Ptr[timeval]) {
       def tv_sec: time_t       = <mark>!(ptr._1)</mark>
       def tv_usec: suseconds_t = <mark>!(ptr._2)</mark>
@@ -308,6 +314,8 @@
   }
   </code></pre>
   </section>
+
+
 </section>
 
 
@@ -326,108 +334,52 @@
   </section>
 
 
-  <section>
-  <h4><mark>Find</mark> Network Interface Name</h4>
-  <pre><code data-trim data-noescape>
-  def findInterface: Option[String] = {
-    withIfaddrs(_.<mark>find</mark>(interface =>
-       (interface.flags & Up) &&
-       (interface.flags & Running) &&
-      !(interface.flags & Loopback)
-    ).map(interface => <mark>fromCString</mark>(interface.name)))
-  }
-
-  def withIfaddrs[A](f: <mark>Iterator</mark>[IfaddrsOps] => A): A = {
-    val ifaddrs = stackalloc[Ptr[Ifaddrs]]
-
-    if (getifaddrs(ifaddrs) != -1) {
-      val ret = <mark>f((!ifaddrs).iterator)</mark>
-      freeifaddrs(!ifaddrs)
-      ret
-    } else {
-      println("failed to getifaddrs")
-      sys.exit(1)
-    }
-  }
-  </code></pre>
-  </section>
-  
 
   <section>
-  <h4>Ifaddrs in C</h4>
+  <h4>ifaddrs api</h4>
   <pre><code data-trim data-noescape>
-   int getifaddrs(struct ifaddrs **ifap);
+  // in C
 
-   void freeifaddrs(struct ifaddrs *ifa);
+  int getifaddrs(
+    struct ifaddrs **ifap);
+
+
+  void freeifaddrs(
+    struct ifaddrs *ifa);
    
-   struct ifaddrs {
-     struct ifaddrs  *ifa_next;
-     char            *ifa_name;
-     unsigned int     ifa_flags;
-     struct sockaddr *ifa_addr;
-     struct sockaddr *ifa_netmask;
-     struct sockaddr *ifa_ifu;
-     void            *ifa_data;
-   };
 
+
+  struct ifaddrs {
+    struct ifaddrs  *ifa_next;
+    char            *ifa_name;
+    unsigned int     ifa_flags;
+    struct sockaddr *ifa_addr;
+    struct sockaddr *ifa_netmask;
+    struct sockaddr *ifa_ifu;
+    void            *ifa_data;
+  };
   </code></pre>
-  </section>
 
-
-  <section>
-  <h4>Ifaddrs in Scala</h4>
-  <pre><code data-trim data-noescape>
-  object IfaddrH {
-    type Ifaddrs = CStruct7[
-    //Ptr[Ifaddrs] see scala-native#634
-      Ptr[CByte],     // [1] ifa_next
-
-      Ptr[CChar],    // [2] ifa_name
-      CInt,          // [3] ifa_flags
-      Ptr[SockAddr], // [4] ifa_addr
-      Ptr[SockAddr], // [5] ifa_netmask
-      Ptr[SockAddr], // [6] ifa_ifu
-      Ptr[CByte]      // [7] ifa_data (void*)
-    ]
-    // ...
-  }
-  </code></pre>
-  </section>
-
-  <section>
-  <h4>Ifaddrs in Scala</h4>
   <pre><code data-trim data-noescape>
   @extern
   object Ifaddr {
-    def getifaddrs(ifap: Ptr[Ptr[Ifaddrs]]): CInt = extern  
-    def freeifaddrs(ifa: Ptr[Ifaddrs]): Unit = extern
-  }
-  </code></pre>
-  </section>
+    def getifaddrs(
+      ifap: Ptr[Ptr[Ifaddrs]]
+    ): CInt = extern
 
-  <section>
-  <h4>$$$ Richer Types $$$</h4>
-  <pre><code data-trim data-noescape>
-  implicit class IfaddrsOps(val ptr: Ptr[Ifaddrs]){
-    // scala-native#634
-    def next: Ptr[Ifaddrs]  = (!(ptr._1)).cast[Ptr[Ifaddrs]]
-    
-    def name: Ptr[CChar]    = !(ptr._2)
-    def flags: <mark>SiocgifFlags</mark> = new SiocgifFlags(!(ptr._3))
-    def addr: Ptr[SockAddr] = !(ptr._4)
-    def data: Ptr[Byte]     = !(ptr._7)
-    
-    // scala-native#367 we need to manually box Ptr[T]
-    def iterator: <mark>Iterator[IfaddrsOps]</mark> = new Iterator[IfaddrsOps]{
-      private var current = new IfaddrsOps(ptr)
+    def freeifaddrs(
+      ifa: Ptr[Ifaddrs]
+    ): Unit = extern
 
-      def hasNext: Boolean = current.ptr.next != null
-      
-      def next(): IfaddrsOps = {
-        current = new IfaddrsOps(current.next)
-        current
-      }
-    }
+    type Ifaddrs = CStruct7[
+      Ptr[CByte], // scala-native#634
+      Ptr[CChar],
+      CInt,
+      Ptr[SockAddr],
+      Ptr[SockAddr],
+      Ptr[SockAddr],
+      Ptr[CByte]
+    ]
   }
   </code></pre>
   </section>
@@ -448,6 +400,65 @@
   </code></pre>
   </section>
 
+  <section>
+  <h4>$$$ Richer Types $$$</h4>
+  <pre><code data-trim data-noescape>
+  implicit class IfaddrsOps(val ptr: Ptr[Ifaddrs]){
+    // scala-native#634
+    def next: Ptr[Ifaddrs]  = (!(ptr._1)).cast[Ptr[Ifaddrs]]
+    
+    def name: Ptr[CChar]       = !(ptr._2)
+    def flags: <mark>SiocgifFlags</mark>    = new SiocgifFlags(!(ptr._3))
+    def addr: Option[SockAddr] = Option(new SockAddrOps(!(ptr._4)))
+    def data: Ptr[Byte]        = !(ptr._7)
+    
+    // scala-native#367 we need to manually box Ptr[T]
+    def iterator: <mark>Iterator[IfaddrsOps]</mark> = new Iterator[IfaddrsOps]{
+      private var current = new IfaddrsOps(ptr)
+
+      def hasNext: Boolean = current.ptr.next != null
+      
+      def next(): IfaddrsOps = {
+        current = new IfaddrsOps(current.next)
+        current
+      }
+    }
+  }
+  </code></pre>
+  </section>
+
+  <section>
+  <h4>Get Network Interfaces</h4>
+  <pre><code data-trim data-noescape>
+  def withIfaddrs[A](f: <mark>Iterator</mark>[IfaddrsOps] => A): A = {
+    val ifaddrs = stackalloc[Ptr[Ifaddrs]]
+
+    if (getifaddrs(ifaddrs) != -1) {
+      val ret = <mark>f((!ifaddrs).iterator)</mark>
+      freeifaddrs(!ifaddrs)
+      ret
+    } else {
+      println("failed to getifaddrs")
+      sys.exit(1)
+    }
+  }
+  </code></pre>
+  </section>
+
+  <section>
+  <h4><mark>Find</mark> Network Interface Name</h4>
+  <pre><code data-trim data-noescape>
+  def findInterface: Option[String] = {
+    withIfaddrs(_.<mark>find</mark>(interface =>
+       (interface.flags & Up) &&
+       (interface.flags & Running) &&
+      !(interface.flags & Loopback)
+    ).map(interface => <mark>fromCString</mark>(interface.name)))
+  }
+  </code></pre>
+
+  </section>
+  
 </section>
 
 
@@ -475,10 +486,9 @@
     withIfaddrs(
       _.find(interface =>
         fromCString(interface.name) == interfaceName &&
-        ifa.addr != null &&
-        ifa.addr.family == Packet
+        ifa.addr.map(_.family == Packet).getOrElse(false)
       )
-      .map(interface => 
+      .map(interface =>
         Counters(ifa.data.cast[Ptr[RtnlLinkStats]])
       )
     )
@@ -684,22 +694,25 @@ class CountersHistory (
                        history: CountersHistory,
                        way: Way
                        interfaceName: Option[String]): Unit = {
-    // ...
+    // Print the title
     interfaceName.foreach{ name =>
       val text = s"[ snbwmon | interface: $name ]"
       val center = (size.width - text.size) / 2
       printFormatted(window, 0, center, toCString(text));
     }
 
+    // For each column...
     history.maximum(way).foreach{ max =>
       val (rate, unit) = showBytes(max)  
       printFormatted(window, 0, 1, c"[%.2f %s/s]", rate, toCString(unit))
+      // ... starting from the right ...
       history.getQueue(way).reverse.zipWithIndex.foreach{ case (value, i) =>
         val col = size.width - i - 2
         val border = 2
         val h = Math.ceil(value.toDouble / max.toDouble * (size.height - border).toDouble)
         var j = size.height - 2
         var jj = 0
+        // ... print each row
         while(j > 0 && jj < h) {
           printChar(window, j, col, '*')
           j -= 1

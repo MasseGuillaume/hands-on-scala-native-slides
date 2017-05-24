@@ -232,14 +232,14 @@
   </section>
 
   <section>
-  <h4>Draw Loop (in C)</h4>
+  <h4>Draw Loop (C VS Scala)</h4>
   <pre><code data-trim data-noescape>
-  void draw(){ }
-
-  int main(int argc, char **argv) {
+  // In C
+  void waitLoop() {
     long timer  = 0;
     bool redraw = true;
     <mark>struct timeval tv;</mark>
+
 
     while(true){
       <mark>gettimeofday(&tv, NULL);</mark>
@@ -250,27 +250,29 @@
       }
 
       if(redraw) {
-        draw()
+        <mark>draw()</mark>
         redraw = false
       }
     }
   }
   </code></pre>
-  </section>
 
-  <section>
-    <h4>Draw Loop</h4>
   <pre><code data-trim data-noescape>
-  def waitLoop(body: => Unit): Unit = {
+  // IN Scala
+  def waitLoop(<mark>body: => Unit</mark>): Unit = {
     var timer  = 0L
     var redraw = false
-    val tv: <mark>Ptr[timeval]</mark> = <mark>stackalloc[timeval]</mark>
+    val tv: <mark>Ptr[timeval]</mark> =
+      <mark>stackalloc[timeval]</mark>
+
     while (true) {
       <mark>gettimeofday(tv, null)</mark>
-      if (timer < tv.tv_sec) { // +1 second
+
+      if (timer < tv.tv_sec) {
         timer = tv.tv_sec
         redraw = true
       }
+
       if (redraw) {
         body
         redraw = false
@@ -283,38 +285,39 @@
   <section>
   <h4>POSIX api</h4>
   <pre><code data-trim data-noescape>
-   int gettimeofday(struct timeval *tv, struct timezone *tz);
+   //in C
+
+
+   int gettimeofday(
+     struct timeval *tv, 
+     struct timezone *tz
+   );
   
    struct timeval {
      time_t      tv_sec;
      suseconds_t tv_usec;
    };
-  
-   struct timezone {
-     int tz_minuteswest;
-     int tz_dsttime;
-   };
    </code></pre>
+    <pre><code data-trim data-noescape>
+    <mark>@extern</mark>
+    object posix {
+
+      def gettimeofday(
+        tv: Ptr[timeval],
+        tz: Ptr[timezone]
+      ): Unit = <mark>extern</mark>
+
+      type timeval = <mark>CStruct2[
+        time_t,
+        suseconds_t
+      ]</mark>  
+    }
+    </code></pre>
    </section>
 
   <section>
-  <h4>Interrop with C</h4>
+  <h4>POSIX api (cont.)</h4>
   <pre><code data-trim data-noescape>
-  import scalanative.native._
-
-  <mark>@extern</mark>
-  object posix {
-    import posixops._
-
-    type time_t      = CLong
-    type suseconds_t = CLong
-    type timeval     = <mark>CStruct2[time_t, suseconds_t]</mark>
-    type timezone    = <mark>CStruct0</mark>
-
-    def gettimeofday(tv: Ptr[timeval], tz: Ptr[timezone]): Unit =
-      <mark>extern</mark>
-  }
-
   object posixops {
     implicit class timevalOps(val ptr: Ptr[timeval]) {
       def tv_sec: time_t       = <mark>!(ptr._1)</mark>
@@ -323,6 +326,8 @@
   }
   </code></pre>
   </section>
+
+
 </section>
 
 
@@ -343,44 +348,50 @@
 
 
   <section>
-  <h4>Ifaddrs in C</h4>
+  <h4>ifaddrs api</h4>
   <pre><code data-trim data-noescape>
-   int getifaddrs(struct ifaddrs **ifap);
+  // in C
 
-   void freeifaddrs(struct ifaddrs *ifa);
+  int getifaddrs(
+    struct ifaddrs **ifap);
+
+
+  void freeifaddrs(
+    struct ifaddrs *ifa);
    
-   struct ifaddrs {
-     struct ifaddrs  *ifa_next;
-     char            *ifa_name;
-     unsigned int     ifa_flags;
-     struct sockaddr *ifa_addr;
-     struct sockaddr *ifa_netmask;
-     struct sockaddr *ifa_ifu;
-     void            *ifa_data;
-   };
 
+
+  struct ifaddrs {
+    struct ifaddrs  *ifa_next;
+    char            *ifa_name;
+    unsigned int     ifa_flags;
+    struct sockaddr *ifa_addr;
+    struct sockaddr *ifa_netmask;
+    struct sockaddr *ifa_ifu;
+    void            *ifa_data;
+  };
   </code></pre>
-  </section>
 
-
-  <section>
-  <h4>Ifaddrs in Scala</h4>
   <pre><code data-trim data-noescape>
   @extern
   object Ifaddr {
-    type Ifaddrs = CStruct7[
-    //Ptr[Ifaddrs] see scala-native#634
-      Ptr[CByte],     // [1] ifa_next
-      Ptr[CChar],     // [2] ifa_name
-      CInt,           // [3] ifa_flags
-      Ptr[SockAddr],  // [4] ifa_addr
-      Ptr[SockAddr],  // [5] ifa_netmask
-      Ptr[SockAddr],  // [6] ifa_ifu
-      Ptr[CByte]      // [7] ifa_data (void*)
-    ]
+    def getifaddrs(
+      ifap: Ptr[Ptr[Ifaddrs]]
+    ): CInt = extern
 
-    def getifaddrs(ifap: Ptr[Ptr[Ifaddrs]]): CInt = extern
-    def freeifaddrs(ifa: Ptr[Ifaddrs]): Unit = extern
+    def freeifaddrs(
+      ifa: Ptr[Ifaddrs]
+    ): Unit = extern
+
+    type Ifaddrs = CStruct7[
+      Ptr[CByte], // scala-native#634
+      Ptr[CChar],
+      CInt,
+      Ptr[SockAddr],
+      Ptr[SockAddr],
+      Ptr[SockAddr],
+      Ptr[CByte]
+    ]
   }
   </code></pre>
   </section>

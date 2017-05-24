@@ -1,7 +1,24 @@
-.reveal pre code {
-  max-height: 600px;
-}
 
 .slide-number {
   font-size: 32px;
+}
+
+.reveal {
+  pre code {
+    max-height: 600px;
+  }
+
+  // when we have two pre, display them side-by-side
+  pre:nth-of-type(1):not(:only-of-type),
+  pre:nth-of-type(2) {
+    width: 49%;
+  }
+  
+  pre:nth-of-type(1):not(:only-of-type) {
+     float: left;
+  }
+
+  pre:nth-of-type(2) {
+    float: right;
+  }
 }

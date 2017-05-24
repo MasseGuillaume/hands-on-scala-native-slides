@@ -71,13 +71,35 @@
   </section>
 
   <section>
-    <h2>Features</h2>
+    <h2>Features 0.1.0</h2>
     <ul>
       <li><mark>Amazing C Interrop</mark></li>
+      <li>Garbage Collection</li>
       <li>Fast startup time</li>
       <li>IDE support (100% Scala)</li>
-      <li>Garbage Collection</li>
+      <li>seamless sbt integration (sbt compile, crossProject)</li>
     </ul>
+  </section>
+
+  <section>
+    <h2>Features 0.2.0</h2>
+    <ul>
+      <li>java.util.regex.*, java.io.*</li>
+      <li>scala.concurrent.future</li>
+    </ul>
+  </section>
+
+  <section>
+    <h2>Features 0.3.0</h2>
+    <ul>
+      <li>Improved Garbage Collection</li>
+      <li>java.nio.*, java.util.jar.*, java.util.zip.*</li>
+      <li>sbt test</li>
+    </ul>
+  </section>
+
+  <section>
+    scalafmt Demo
   </section>
 
 
@@ -86,12 +108,7 @@
 
 
 
-
-
-
-
 <section>
-
   <section>
     <h2>Ncurse Bandwidth Monitor<h2>
   </section>
@@ -155,14 +172,14 @@
   <h4>Sbt Setup</h4>
   project/plugins.sbt
   <pre><code data-trim data-noescape>
-  addSbtPlugin(<mark>"org.scala-native" % "sbt-scala-native" % "0.1.0"</mark>)
+  addSbtPlugin(<mark>"org.scala-native" % "sbt-scala-native" % "0.2.0"</mark>)
   </code></pre>
 
   build.sbt
   <pre><code data-trim data-noescape>
   enablePlugins(<mark>ScalaNativePlugin</mark>)
 
-  scalaVersion := "2.11.8"
+  scalaVersion := "2.11.11"
   </code></pre>
   </section>
 
@@ -363,14 +380,14 @@
   object IfaddrH {
     type Ifaddrs = CStruct7[
     //Ptr[Ifaddrs] see scala-native#634
-      Ptr[CInt],     // [1] ifa_next
+      Ptr[CByte],     // [1] ifa_next
 
       Ptr[CChar],    // [2] ifa_name
       CInt,          // [3] ifa_flags
       Ptr[SockAddr], // [4] ifa_addr
       Ptr[SockAddr], // [5] ifa_netmask
       Ptr[SockAddr], // [6] ifa_ifu
-      Ptr[Byte]      // [7] ifa_data (void*)
+      Ptr[CByte]      // [7] ifa_data (void*)
     ]
     // ...
   }
@@ -710,6 +727,10 @@ class CountersHistory (
 
   <section>
     <h1>Try it out: <a class="code-link" href="https://git.io/vSMS7">git.io/vSMS7</a></h1>
+  </section>
+
+  <section>
+    <h3>sbt new scala-native/scala-native.g8</h3>
   </section>
 
   <section>

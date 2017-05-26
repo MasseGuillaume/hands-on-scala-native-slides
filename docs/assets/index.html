@@ -337,8 +337,7 @@
 
   <section>
   <h4>ifaddrs api</h4>
-  <pre><code data-trim data-noescape>
-  // in C
+  <pre><code data-noescape>
 
   int getifaddrs(
     struct ifaddrs **ifap);
@@ -347,7 +346,6 @@
   void freeifaddrs(
     struct ifaddrs *ifa);
    
-
 
   struct ifaddrs {
     struct ifaddrs  *ifa_next;

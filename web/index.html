@@ -69,18 +69,21 @@
     <h2>What is Scala-Native ?</h2>
     <ul>
       <li>Created by Denys Shabalin (quasiquote)</li>
-      <li>Open source: <a
-                               href="https://github.com/scala-native/scala-native">github.com/scala-native/scala-native</a></li>
+      <li>Open source: <a href="https://github.com/scala-native/scala-native">github.com/scala-native/scala-native</a></li>
       <li>Started August 2015</li>
     </ul>
   </section>
 
 
   <section>
-    <h2>How it works</h2>
+    <h2>How does it work?</h2>
     <ul>
-      <li>*.scala -> *.class -> jvm</li>
-      <li>*.scala ->   llvm  -> app.exe</li>
+        <li>
+            JVM: <code>*.scala -> *.class -> jvm</code>
+        </li>
+        <li>
+            Native: <code>*.scala -> *.ll -> app.exe</code>
+        </li>
     </ul>
   </section>
 
@@ -100,16 +103,28 @@
     <ul>
       <li>java.util.regex.*, java.io.*</li>
       <li>scala.concurrent.future</li>
+      <li>Better support for strings and characters</li>
+      <li>System properties</li>
+      <li>...</li>
     </ul>
   </section>
 
   <section>
     <h2>Features 0.3.0</h2>
     <ul>
-      <li>Improved Garbage Collection</li>
+      <li>Improved garbage collector</li>
       <li>java.nio.*, java.util.jar.*, java.util.zip.*</li>
       <li>sbt test</li>
     </ul>
+  </section>
+
+  <section>
+      <h2>Features 0.4.0?</h2>
+      <ul>
+          <li>Windows support</li>
+          <li>Automatic binding generation</li>
+          <li>Your idea?</li>
+      </ul>
   </section>
 
   <section>
@@ -172,13 +187,22 @@
   <h4>System Setup</h4>
 
   macOS:
-  <pre>brew install <mark>llvm bdw-gc re2</mark> ncurses</pre>
+  <pre>
+$ brew install <mark>llvm</mark> \
+               <mark>bdw-gc</mark> \
+               <mark>re2</mark> \
+               ncurses</pre>
 
   Ubuntu:
-  <pre>sudo apt-get install <mark>clang libgc-dev libunwind-dev libre2-dev</mark> libncurses-dev</pre>
+  <pre>
+$ sudo apt-get install <mark>clang</mark> \
+                       <mark>libgc-dev</mark> \
+                       <mark>libunwind-dev</mark> \
+                       <mark>libre2-dev</mark> \
+                       libncurses-dev</pre>
 
   Nix:
-  <pre>nix-shell .</pre>
+  <pre>$ nix-shell .</pre>
 
   </section>
 
@@ -754,6 +778,10 @@ class CountersHistory (
 
   <section>
     <h3>sbt new scala-native/scala-native.g8</h3>
+    <ul>
+        <li>Minimal template of Scala Native project</li>
+        <li>Your first Native app in less than 10 seconds!</li>
+    </ul>
   </section>
 
   <section>

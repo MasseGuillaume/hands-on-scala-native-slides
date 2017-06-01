@@ -109,14 +109,14 @@
   <section>
       <h2>Features 0.4.0?</h2>
       <ul>
-          <li>Windows support</li>
-          <li>Automatic binding generation</li>
-          <li>Your idea?</li>
+          <li>Improved Interop (@densh)</li>
+          <li>Windows support (@muxanick)</li>
+          <li>Automatic binding generation (@jonas)</li>
       </ul>
   </section>
 
   <section>
-    scalafmt Demo
+    <img src="img/scalafmt.gif" alt="scalafmt demo">
   </section>
 
 
@@ -243,7 +243,7 @@ $ sudo apt-get install <mark>clang</mark> \
   </code></pre>
   </section>
 
-  <section>
+  <section class="side-by-side">
   <h4>Draw Loop (C VS Scala)</h4>
   <pre><code data-trim data-noescape>
   // In C
@@ -294,7 +294,7 @@ $ sudo apt-get install <mark>clang</mark> \
   </code></pre>
   </section>
 
-  <section>
+  <section class="side-by-side">
   <h4>POSIX api</h4>
   <pre><code data-trim data-noescape>
    //in C
@@ -359,7 +359,7 @@ $ sudo apt-get install <mark>clang</mark> \
 
 
 
-  <section>
+  <section class="side-by-side">
   <h4>ifaddrs api</h4>
   <pre><code data-noescape>
 
@@ -765,7 +765,7 @@ class CountersHistory (
   </section>
 
   <section>
-    <h3>sbt new scala-native/scala-native.g8</h3>
+    <h3>sbt new MasseGuillaume/scala-native.g8</h3>
     <ul>
         <li>Minimal template of Scala Native project</li>
         <li>Your first Native app in less than 10 seconds!</li>
@@ -775,10 +775,10 @@ class CountersHistory (
   <section>
     <h3>Hacking ideas</h3>
     <ul>
-      <li>TODO app with ncurses</li>
-      <li>Create ncurses Wrapper</li>
-      <li>Create Linux Api Wrapper <br> 
-          (Only 10 000 methods!)</li>
+      <li>use crossProject on existing libraries</li>
+      <li>port cli tools to native (scalafmt, coursier, ...)</li>
+      <li>Hack on your Raspberry PI 3 (IOT)</li>
+      <li>...</li>
     </ul>
   </section>
 
